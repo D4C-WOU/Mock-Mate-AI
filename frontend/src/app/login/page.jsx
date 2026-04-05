@@ -30,7 +30,7 @@ export default function LoginPage() {
           </div>
 
           <button className="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-            Sign In
+            Log In
           </button>
         </form>
 
