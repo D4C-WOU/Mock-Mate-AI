@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth_routes
+from routes import auth_routes, interview_routes
 
 app = FastAPI(title="MockMate API")
 
@@ -13,9 +13,10 @@ app.add_middleware(
 )
 
 app.include_router(auth_routes.router)
+app.include_router(interview_routes.router)
 
 @app.get('/')
 def read_root():
   return {
-    'message' : 'Welcome nigga'
+    'message' : 'Mock Mate API is running '
   }
