@@ -8,7 +8,7 @@ export async function POST(req) {
     const { messages, jobRole, skills } = await req.json();
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction: `You are an expert technical interviewer for a ${jobRole || "Software Engineering"} position. The candidate has listed these skills: ${skills || "General IT"}. 
       Rules:
       1. Ask ONLY ONE interview question at a time.
