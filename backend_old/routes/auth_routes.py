@@ -10,8 +10,9 @@ async def signup(user: UserAuth):
   existing_user= await users_collection.find_one({'email':user.email})
   if existing_user:
     raise HTTPException(status_code=400,detail="Email already registered")
+  
   hashed_pass = get_password_hash(user.password)
-  await users_collection.insert_one({'email': user.email, 'password': hashed_pass})
+  await users_collection.insert_one({'email': user.email, 'password': hashed_pass,})
   return {'message':'User created successfully'}
 
 @router.post('/login')
