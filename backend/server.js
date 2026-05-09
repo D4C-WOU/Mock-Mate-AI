@@ -1,9 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
-
+const interviewRoutes = require("./routes/interviewRoutes");
 dotenv.config();
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 
 //routes
 app.use("/api/auth", authRoutes);
+app.use("/api/interviews", interviewRoutes);
 
 app.get("/", (req, res) => {
   res.json({
