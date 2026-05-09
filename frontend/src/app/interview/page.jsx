@@ -3,25 +3,47 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
 export default function InterviewPage() {
-  // --- SPRINT 5: DYNAMIC DATA ---
-  // In a real app, you'd fetch this from MongoDB in a useEffect.
-  // For now, we'll initialize it with your actual profile info.
+
+
   const [userProfile, setUserProfile] = useState({
     role: "Full Stack Developer",
     skills: "React, Next.js, FastAPI, MongoDB, Tailwind"
   });
 
+  useEffect(() => {
+
+    const storedData = localStorage.getItem('interviewData')
+
+    if (storedData) {
+      const parsedData = JSON.parse(storedData)
+
+      setUserProfile({
+        role: parsedData.jobRole,
+        skills: parsedData.skills
+      })
+    }
+  }, [])
+
   const [messages, setMessages] = useState([
-    { role: "model", content: `Hello! I am your AI Mock Interviewer. I see you are applying for a ${userProfile.role} position. Are you ready to begin?` }
+    {
+      role: "model",
+      content: "Hello! I am your AI Mock Interviewer. Are you ready to begin"
+    }
   ]);
+
   const [input, setInput] = useState("");
+
   const [loading, setLoading] = useState(false);
+
   const [isFinished, setIsFinished] = useState(false); // Track if interview is over
+
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -34,11 +56,13 @@ export default function InterviewPage() {
     const newMessages = [...messages, userMessage];
 
     setMessages(newMessages);
+
     setInput("");
+
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("http://localhost:5000/api/interviews/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,8 +72,9 @@ export default function InterviewPage() {
         }),
       });
 
+
+      const data = await res.json()
       if (res.ok) {
-        const data = await res.json();
         setMessages((prev) => [...prev, { role: "model", content: data.text }]);
       }
     } catch (error) {
@@ -59,9 +84,11 @@ export default function InterviewPage() {
     }
   };
 
-  // --- SPRINT 5: FEEDBACK ENGINE ---
+  // feedback
   const handleEndInterview = async () => {
+
     setLoading(true);
+
     setIsFinished(true); // Disable further input
 
     const feedbackPrompt = {
@@ -72,7 +99,7 @@ export default function InterviewPage() {
     const finalMessages = [...messages, feedbackPrompt];
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("http://localhost:5000/api/interviews/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -82,8 +109,10 @@ export default function InterviewPage() {
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
+
         setMessages((prev) => [...prev, { role: "model", content: data.text }]);
       }
     } catch (error) {
@@ -98,11 +127,15 @@ export default function InterviewPage() {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Technical Interview</h1>
-          <p className="text-sm text-slate-500">Role: {userProfile.role}</p>
+          <h1 className="text-xl font-bold text-slate-900">
+            Technical Interview
+          </h1>
+          <p className="text-sm text-slate-500">
+            Role: {userProfile.role}
+          </p>
         </div>
 
-        {/* SPRINT 5: END INTERVIEW BUTTON */}
+        {/*  End interview button */}
         {!isFinished ? (
           <button
             onClick={handleEndInterview}
@@ -124,8 +157,8 @@ export default function InterviewPage() {
             <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[80%] rounded-2xl px-5 py-4 whitespace-pre-wrap ${msg.role === "user"
-                    ? "bg-indigo-600 text-white rounded-br-none shadow-md"
-                    : "bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-sm"
+                  ? "bg-indigo-600 text-white rounded-br-none shadow-md"
+                  : "bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-sm"
                   }`}
               >
                 {msg.content}
