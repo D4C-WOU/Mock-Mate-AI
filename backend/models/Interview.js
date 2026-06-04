@@ -1,31 +1,67 @@
 const mongoose = require("mongoose");
 
+const messageSchema = new mongoose.Schema(
+  {
+    role: String,
+
+    content: String,
+  },
+  {
+    _id: false,
+  },
+);
+
+const feedbackSchema = new mongoose.Schema(
+  {
+    score: {
+      type: String,
+      default: "",
+    },
+
+    strengths: {
+      type: String,
+      default: "",
+    },
+
+    improvements: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 const interviewSchema = new mongoose.Schema(
   {
     userEmail: {
       type: String,
       required: true,
     },
+
     jobRole: {
       type: String,
       required: true,
     },
+
     experienceLevel: {
       type: String,
       required: true,
     },
+
     skills: {
       type: String,
       required: true,
     },
-    messages: [
-      {
-        role: String,
-        content: String,
-      },
-    ],
+
+    messages: [messageSchema],
+
+    feedback: feedbackSchema,
+
     status: {
       type: String,
+      enum: ["active", "completed", "abandoned"],
       default: "active",
     },
   },

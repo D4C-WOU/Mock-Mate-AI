@@ -10,7 +10,17 @@ export default function InterviewPage() {
     skills: "React, Next.js, FastAPI, MongoDB, Tailwind"
   });
 
+  const [interviewId, setInterviewId] =
+    useState("");
+
   useEffect(() => {
+
+    const storedInterviewId =
+      localStorage.getItem("interviewId");
+
+    if (storedInterviewId) {
+      setInterviewId(storedInterviewId);
+    }
 
     const storedData = localStorage.getItem('interviewData')
 
@@ -66,6 +76,7 @@ export default function InterviewPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          interviewId,
           messages: newMessages,
           jobRole: userProfile.role,
           skills: userProfile.skills
@@ -103,6 +114,7 @@ export default function InterviewPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          interviewId,
           messages: finalMessages,
           jobRole: userProfile.role,
           skills: userProfile.skills

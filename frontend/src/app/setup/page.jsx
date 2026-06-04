@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SetupPage() {
@@ -12,6 +12,14 @@ export default function SetupPage() {
     skills: ""
   })
 
+  useEffect(() => {
+    const savedInterview = localStorage.getItem('retakeInterview')
+    if (savedInterview) {
+      setFormData(JSON.parse(savedInterview))
+    }
+
+    localStorage.removeItem('retakeInterview')
+  }, [])
 
   const handleChange = (e) => {
     setFormData({
@@ -27,40 +35,55 @@ export default function SetupPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/interviews/setup", {
-        method: "POST",
+      const res = await fetch(
+        "http://localhost:5000/api/interviews/setup",
+        {
+          method: "POST",
 
-        headers: {
-          "Content Type": "application/json",
-          Authoriztion: `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      })
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
 
-      const data = await JSON.stringify(formData)
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const data = await res.json();
 
       if (res.ok) {
 
         localStorage.setItem(
           "interviewData",
           JSON.stringify(formData)
-        )
+        );
 
-        router.push('/interview')
+        localStorage.setItem(
+          "interviewId",
+          data.interview._id
+        );
+
+        router.push("/interview");
 
       } else {
-        alert(data.message || "Failed tp  create Interview")
+
+        alert(
+          data.message || "Failed to create interview"
+        );
       }
 
     } catch (error) {
 
-      console.error("Interview setup error:", error)
+      console.error(
+        "Interview setup error:",
+        error
+      );
 
     } finally {
 
-      setLoading(false)
+      setLoading(false);
     }
   };
 

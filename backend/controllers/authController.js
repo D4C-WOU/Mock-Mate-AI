@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-
-const USer = require("../models/User");
 const User = require("../models/User");
 
 // to generate jwt
@@ -84,7 +82,7 @@ const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     //generate token
-    const token = generateToken(user.email);
+    const token = generateToken(user);
 
     res.status(200).json({
       message: "Login successful",

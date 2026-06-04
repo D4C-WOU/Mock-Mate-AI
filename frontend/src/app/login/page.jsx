@@ -42,7 +42,7 @@ export default function LoginPage() {
 
 
       const data = await res.json();
-
+      console.log(data)
 
       if (res.ok) {
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
           data.token
         );
 
-        window.location.href = "/setup";
+        window.location.href = "/dashboard";
 
       } else {
 

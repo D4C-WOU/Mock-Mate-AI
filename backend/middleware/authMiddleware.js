@@ -1,31 +1,35 @@
 const jwt = require("jsonwebtoken");
 
-const protect = async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
+const authMiddleware = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-      //verify the token
-      const decoded = jwt.verify(tokem, process.env.JWT_SECRET);
-
-      //save user email to request
-      req.userEmail = decoded.email;
-
-      next();
-    } catch (error) {
+    if (!authHeader) {
       return res.status(401).json({
-        message: "Invalid token",
+        message: "No token provided",
       });
     }
-  } else {
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Invalid token format",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    console.log("JWT ERROR:", error.message);
+
     return res.status(401).json({
-      message: "No token provided ",
+      message: "Invalid token",
     });
   }
 };
 
-module.exports = protect;
+module.exports = authMiddleware;
