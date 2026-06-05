@@ -16,7 +16,7 @@ const {
 router.post("/setup", protect, createInterview);
 
 // CHAT
-router.post("/chat", chatWithAI);
+router.post("/chat", protect, chatWithAI);
 
 router.put("/:id/feedback", protect, saveInterviewFeedback);
 

@@ -1,6 +1,9 @@
 const Interview = require("../models/Interview");
 
-const { generateAIResponse } = require("../services/geminiService");
+const {
+  generateAIResponse,
+  generateInterviewFeedback,
+} = require("../services/geminiService");
 
 // CREATE INTERVIEW
 const createInterview = async (req, res) => {
@@ -62,7 +65,7 @@ const chatWithAI = async (req, res) => {
     console.error("Chat Error:", error);
 
     res.status(500).json({
-      message: "AI Error",
+      message: error.message || "AI service unavailable",
     });
   }
 };
@@ -107,22 +110,40 @@ const getInterviewById = async (req, res) => {
 
 const saveInterviewFeedback = async (req, res) => {
   try {
-    const { feedback } = req.body;
+    const { interviewId, messages, jobRole, skills } = req.body;
 
-    const updatedInterview = await Interview.findByIdAndUpdate(
-      req.params.id,
-      {
-        finalFeedback: feedback,
-        status: "completed",
-      },
-      { new: true },
+    const feedbackText = await generateInterviewFeedback(
+      messages,
+      jobRole,
+      skills,
     );
 
-    res.status(200).json(updatedInterview);
+    const cleanedText = feedbackText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const feedback = JSON.parse(cleanedText);
+
+    const updatedInterview = await Interview.findByIdAndUpdate(
+      interviewId,
+      {
+        feedback,
+        status: "completed",
+      },
+      {
+        new: true,
+      },
+    );
+
+    res.status(200).json({
+      feedback: updatedInterview.feedback,
+    });
   } catch (error) {
     console.error("Save Feedback Error:", error);
+
     res.status(500).json({
-      message: "Server Error",
+      message: "Feedback generation failed",
     });
   }
 };

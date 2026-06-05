@@ -2,52 +2,102 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.0-flash",
+});
+
 const generateAIResponse = async (messages, jobRole, skills) => {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-lite",
+  try {
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
 
-    systemInstruction: `
-You are a professional AI technical interviewer.
+    const formattedMessages = messages
+      .map((msg) => `${msg.role}: ${msg.content}`)
+      .join("\n");
 
-Rules:
-1. Ask ONLY ONE question at a time.
-2. Wait for the candidate answer.
-3. Evaluate briefly.
-4. Ask next question naturally.
-5. Keep responses concise.
+    const prompt = `
+You are a professional AI mock interviewer.
 
-Job Role:
-${jobRole}
+Role: ${jobRole}
 
-Skills:
-${skills}
-`,
-  });
+Skills: ${skills}
 
-  // Convert message history
-  const formattedHistory = messages.slice(1, -1).map((msg) => ({
-    role: msg.role === "user" ? "user" : "model",
+Conversation:
+${formattedMessages}
 
-    parts: [
-      {
-        text: msg.content,
-      },
-    ],
-  }));
+Respond naturally like a real interviewer.
+`;
 
-  const currentUserInput = messages[messages.length - 1].content;
+    const result = await model.generateContent(prompt);
 
-  const chat = model.startChat({
-    history: formattedHistory,
-  });
+    const response = await result.response;
 
-  const result = await chat.sendMessage(currentUserInput);
+    return response.text();
+  } catch (error) {
+    console.log("GEMINI ERROR:", error.message);
 
-  const response = await result.response;
+    // graceful fallback
+    return `
+I'm temporarily unavailable due to API limits.
 
-  return response.text();
+Please wait a minute and try again.
+
+Meanwhile:
+- Review your previous answer
+- Think about edge cases
+- Prepare an optimized solution
+`;
+  }
 };
 
 module.exports = {
   generateAIResponse,
+};
+
+const generateInterviewFeedback = async (messages, jobRole, skills) => {
+  const formattedConversation = messages
+    .map((msg) => `${msg.role}: ${msg.content}`)
+    .join("\n");
+
+  const prompt = `
+You are an expert technical interviewer.
+
+Analyze this interview for a ${jobRole} role.
+
+Required Skills:
+${skills}
+
+Interview Conversation:
+${formattedConversation}
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "overallScore": 8,
+  "communication": 7,
+  "technicalKnowledge": 9,
+  "problemSolving": 8,
+  "strengths": [
+    "Strong React fundamentals",
+    "Good API understanding"
+  ],
+  "improvements": [
+    "Improve system design explanations",
+    "Give more structured answers"
+  ],
+  "finalFeedback": "Very solid technical foundation with room for communication improvements."
+}
+`;
+
+  const result = await model.generateContent(prompt);
+
+  const response = result.response.text();
+
+  return response;
+};
+
+module.exports = {
+  generateAIResponse,
+  generateInterviewFeedback,
 };

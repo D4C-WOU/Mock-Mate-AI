@@ -13,17 +13,31 @@ const messageSchema = new mongoose.Schema(
 
 const feedbackSchema = new mongoose.Schema(
   {
-    score: {
-      type: String,
-      default: "",
+    overallScore: {
+      type: Number,
+      default: 0,
     },
 
-    strengths: {
-      type: String,
-      default: "",
+    communication: {
+      type: Number,
+      default: 0,
     },
 
-    improvements: {
+    technicalKnowledge: {
+      type: Number,
+      default: 0,
+    },
+
+    problemSolving: {
+      type: Number,
+      default: 0,
+    },
+
+    strengths: [String],
+
+    improvements: [String],
+
+    finalFeedback: {
       type: String,
       default: "",
     },

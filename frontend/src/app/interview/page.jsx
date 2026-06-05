@@ -4,43 +4,33 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 export default function InterviewPage() {
-
-
   const [userProfile, setUserProfile] = useState({
     role: "Full Stack Developer",
-    skills: "React, Next.js, FastAPI, MongoDB, Tailwind"
+    skills: "React, Next.js, FastAPI, MongoDB, Tailwind",
   });
 
-  const [interviewId, setInterviewId] =
-    useState("");
+  const [interviewId, setInterviewId] = useState("");
 
-
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    const interviewIdFromUrl = searchParams.get("id");
 
-    const interviewIdFromUrl =
-      searchParams.get("id");
+    const storedInterviewId = localStorage.getItem("interviewId");
 
-    const storedInterviewId =
-      localStorage.getItem("interviewId");
-
-    const finalInterviewId =
-      interviewIdFromUrl || storedInterviewId;
+    const finalInterviewId = interviewIdFromUrl || storedInterviewId;
 
     if (finalInterviewId) {
-
       setInterviewId(finalInterviewId);
 
       fetchInterview(finalInterviewId);
     }
-
   }, []);
   const [messages, setMessages] = useState([
     {
       role: "model",
-      content: "Hello! I am your AI Mock Interviewer. Are you ready to begin"
-    }
+      content: "Hello! I am your AI Mock Interviewer. Are you ready to begin",
+    },
   ]);
 
   const [input, setInput] = useState("");
@@ -55,55 +45,43 @@ export default function InterviewPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-
   const fetchInterview = async (id) => {
-
     try {
+      const token = localStorage.getItem("token");
 
-      const token =
-        localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/interviews/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const res = await fetch(
-        `http://localhost:5000/api/interviews/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      const text = await res.text();
 
-      const data = await res.json();
+      console.log(text);
 
+      const data = JSON.parse(text);
       if (res.ok) {
-
         setUserProfile({
           role: data.jobRole,
-          skills: data.skills
+          skills: data.skills,
         });
 
         if (data.messages.length > 0) {
-
           setMessages(data.messages);
-
         } else {
-
           setMessages([
             {
               role: "model",
-              content:
-                `Hello! I am your AI Mock Interviewer for the ${data.jobRole} role. Are you ready to begin?`
-            }
+              content: `Hello! I am your AI Mock Interviewer for the ${data.jobRole} role. Are you ready to begin?`,
+            },
           ]);
         }
       }
-
     } catch (error) {
-
       console.error("Fetch Interview Error:", error);
     }
   };
@@ -129,12 +107,15 @@ export default function InterviewPage() {
           interviewId,
           messages: newMessages,
           jobRole: userProfile.role,
-          skills: userProfile.skills
+          skills: userProfile.skills,
         }),
       });
 
+      const text = await res.text();
 
-      const data = await res.json()
+      console.log(text);
+
+      const data = JSON.parse(text);
       if (res.ok) {
         setMessages((prev) => [...prev, { role: "model", content: data.text }]);
       }
@@ -147,36 +128,76 @@ export default function InterviewPage() {
 
   // feedback
   const handleEndInterview = async () => {
-
+    if (loading) return;
     setLoading(true);
 
-    setIsFinished(true); // Disable further input
-
-    const feedbackPrompt = {
-      role: "user",
-      content: "The interview is now over. Please provide a formal feedback report. Include: 1. A Score out of 10. 2. Specific Strengths. 3. Areas for Improvement."
-    };
-
-    const finalMessages = [...messages, feedbackPrompt];
-
     try {
-      const res = await fetch("http://localhost:5000/api/interviews/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          interviewId,
-          messages: finalMessages,
-          jobRole: userProfile.role,
-          skills: userProfile.skills
-        }),
-      });
+      const feedbackPrompt = {
+        role: "user",
+        content:
+          "The interview is now over. Please provide a formal feedback report including: Score out of 10, strengths, weaknesses, and improvement advice.",
+      };
 
-      const data = await res.json();
+      const finalMessages = [...messages, feedbackPrompt];
 
-      if (res.ok) {
+      // STEP 1 → Generate AI Feedback
+      const feedbackRes = await fetch(
+        "http://localhost:5000/api/interviews/chat",
+        {
+          method: "POST",
 
-        setMessages((prev) => [...prev, { role: "model", content: data.text }]);
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+
+          body: JSON.stringify({
+            interviewId,
+            messages: finalMessages,
+            jobRole: userProfile.role,
+            skills: userProfile.skills,
+          }),
+        },
+      );
+
+      const feedbackData = await feedbackRes.json();
+
+      if (!feedbackRes.ok) {
+        alert(feedbackData.message || "AI temporarily unavailable");
+        return;
       }
+
+      // STEP 2 → Show feedback in chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "model",
+          content: feedbackData.text,
+        },
+      ]);
+
+      // STEP 3 → Save feedback in DB
+      await fetch(
+        `http://localhost:5000/api/interviews/${interviewId}/feedback`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            feedback: {
+              score: "Generated by AI",
+              strengths: feedbackData.text,
+              improvements: feedbackData.text,
+            },
+          }),
+        },
+      );
+
+      // STEP 4
+      setIsFinished(true);
     } catch (error) {
       console.error("Feedback Error:", error);
     } finally {
@@ -192,9 +213,7 @@ export default function InterviewPage() {
           <h1 className="text-xl font-bold text-slate-900">
             Technical Interview
           </h1>
-          <p className="text-sm text-slate-500">
-            Role: {userProfile.role}
-          </p>
+          <p className="text-sm text-slate-500">Role: {userProfile.role}</p>
         </div>
 
         {/*  End interview button */}
@@ -206,7 +225,10 @@ export default function InterviewPage() {
             Finish & Get Feedback
           </button>
         ) : (
-          <Link href="/" className="px-4 py-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">
+          <Link
+            href="/dashboard"
+            className="px-4 py-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50"
+          >
             Exit to Home
           </Link>
         )}
@@ -216,11 +238,14 @@ export default function InterviewPage() {
       <main className="flex-1 overflow-y-auto p-6 space-y-6">
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.map((msg, index) => (
-            <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={index}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
               <div
                 className={`max-w-[80%] rounded-2xl px-5 py-4 whitespace-pre-wrap ${msg.role === "user"
-                  ? "bg-indigo-600 text-white rounded-br-none shadow-md"
-                  : "bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-sm"
+                    ? "bg-indigo-600 text-white rounded-br-none shadow-md"
+                    : "bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-sm"
                   }`}
               >
                 {msg.content}
