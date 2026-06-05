@@ -105,6 +105,28 @@ const getInterviewById = async (req, res) => {
   }
 };
 
+const saveInterviewFeedback = async (req, res) => {
+  try {
+    const { feedback } = req.body;
+
+    const updatedInterview = await Interview.findByIdAndUpdate(
+      req.params.id,
+      {
+        finalFeedback: feedback,
+        status: "completed",
+      },
+      { new: true },
+    );
+
+    res.status(200).json(updatedInterview);
+  } catch (error) {
+    console.error("Save Feedback Error:", error);
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
 module.exports = {
   createInterview,
 
@@ -113,4 +135,6 @@ module.exports = {
   getUserInterviews,
 
   getInterviewById,
+
+  saveInterviewFeedback,
 };

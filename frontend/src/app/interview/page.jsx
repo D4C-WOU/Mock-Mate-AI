@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function InterviewPage() {
 
@@ -13,27 +14,28 @@ export default function InterviewPage() {
   const [interviewId, setInterviewId] =
     useState("");
 
+
+  const searchParams = useSearchParams()
+
   useEffect(() => {
+
+    const interviewIdFromUrl =
+      searchParams.get("id");
 
     const storedInterviewId =
       localStorage.getItem("interviewId");
 
-    if (storedInterviewId) {
-      setInterviewId(storedInterviewId);
+    const finalInterviewId =
+      interviewIdFromUrl || storedInterviewId;
+
+    if (finalInterviewId) {
+
+      setInterviewId(finalInterviewId);
+
+      fetchInterview(finalInterviewId);
     }
 
-    const storedData = localStorage.getItem('interviewData')
-
-    if (storedData) {
-      const parsedData = JSON.parse(storedData)
-
-      setUserProfile({
-        role: parsedData.jobRole,
-        skills: parsedData.skills
-      })
-    }
-  }, [])
-
+  }, []);
   const [messages, setMessages] = useState([
     {
       role: "model",
@@ -57,6 +59,54 @@ export default function InterviewPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+
+  const fetchInterview = async (id) => {
+
+    try {
+
+      const token =
+        localStorage.getItem("token");
+
+      const res = await fetch(
+        `http://localhost:5000/api/interviews/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+
+        setUserProfile({
+          role: data.jobRole,
+          skills: data.skills
+        });
+
+        if (data.messages.length > 0) {
+
+          setMessages(data.messages);
+
+        } else {
+
+          setMessages([
+            {
+              role: "model",
+              content:
+                `Hello! I am your AI Mock Interviewer for the ${data.jobRole} role. Are you ready to begin?`
+            }
+          ]);
+        }
+      }
+
+    } catch (error) {
+
+      console.error("Fetch Interview Error:", error);
+    }
+  };
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();

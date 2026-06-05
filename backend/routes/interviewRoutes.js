@@ -9,6 +9,7 @@ const {
   chatWithAI,
   getUserInterviews,
   getInterviewById,
+  saveInterviewFeedback,
 } = require("../controllers/interviewController");
 
 // CREATE INTERVIEW
@@ -16,6 +17,8 @@ router.post("/setup", protect, createInterview);
 
 // CHAT
 router.post("/chat", chatWithAI);
+
+router.put("/:id/feedback", protect, saveInterviewFeedback);
 
 // GET USER INTERVIEWS
 router.get("/my-interviews", protect, getUserInterviews);
