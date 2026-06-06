@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import InterviewClient from "@/components/InterviewClient";
+import InterviewClient from "@/components/interviewClient";
 
 export const dynamic = "force-dynamic";
 

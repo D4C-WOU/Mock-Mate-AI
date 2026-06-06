@@ -1,13 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-
 import Link from "next/link";
-
 import { useSearchParams } from "next/navigation";
 
 import { apiFetch } from "@/lib/api";
-
 import { API_URL } from "@/lib/config";
 
 export default function InterviewClient() {
@@ -33,27 +30,14 @@ export default function InterviewClient() {
 
   const [isFinished, setIsFinished] = useState(false);
 
-  const messagesEndRef = useRef(null);
-
   const searchParams = useSearchParams();
 
-  // scroll to latest message
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
-  };
+  const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // load interview
   useEffect(() => {
     const interviewIdFromUrl = searchParams.get("id");
 
-    const storedInterviewId =
-      localStorage.getItem("interviewId");
+    const storedInterviewId = localStorage.getItem("interviewId");
 
     const finalInterviewId =
       interviewIdFromUrl || storedInterviewId;
@@ -65,7 +49,12 @@ export default function InterviewClient() {
     }
   }, [searchParams]);
 
-  // fetch interview data
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
+
   const fetchInterview = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -81,60 +70,33 @@ export default function InterviewClient() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        console.error(data.message);
+      if (res.ok) {
+        setUserProfile({
+          role: data.jobRole,
+          skills: data.skills,
+          experienceLevel: data.experienceLevel,
+        });
 
-        return;
-      }
-
-      setUserProfile({
-        role: data.jobRole,
-        skills: data.skills,
-        experienceLevel: data.experienceLevel,
-      });
-
-      if (data.status === "completed") {
-        setIsFinished(true);
-      }
-
-      if (data.messages?.length > 0) {
-        setMessages(data.messages);
-      } else {
-        setMessages([
-          {
-            role: "model",
-            content: `Hello! I am your AI Mock Interviewer for the ${data.jobRole} role. Are you ready to begin?`,
-          },
-        ]);
+        if (data.messages?.length > 0) {
+          setMessages(data.messages);
+        }
       }
     } catch (error) {
-      console.error(
-        "Fetch Interview Error:",
-        error
-      );
+      console.error("Fetch Interview Error:", error);
     }
   };
 
-  // send message
   const handleSend = async (e) => {
     e.preventDefault();
 
-    if (
-      !input.trim() ||
-      loading ||
-      isFinished
-    )
-      return;
+    if (!input.trim() || loading || isFinished) return;
 
     const userMessage = {
       role: "user",
       content: input,
     };
 
-    const newMessages = [
-      ...messages,
-      userMessage,
-    ];
+    const newMessages = [...messages, userMessage];
 
     setMessages(newMessages);
 
@@ -143,8 +105,7 @@ export default function InterviewClient() {
     setLoading(true);
 
     try {
-      const token =
-        localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
       const res = await apiFetch(
         `${API_URL}/interviews/chat`,
@@ -152,22 +113,16 @@ export default function InterviewClient() {
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
-
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
 
           body: JSON.stringify({
             interviewId,
-
             messages: newMessages,
-
             experienceLevel:
               userProfile.experienceLevel,
-
             jobRole: userProfile.role,
-
             skills: userProfile.skills,
           }),
         }
@@ -175,22 +130,15 @@ export default function InterviewClient() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        alert(
-          data.message ||
-          "AI temporarily unavailable"
-        );
-
-        return;
+      if (res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "model",
+            content: data.text,
+          },
+        ]);
       }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "model",
-          content: data.text,
-        },
-      ]);
     } catch (error) {
       console.error("Chat Error:", error);
     } finally {
@@ -198,7 +146,6 @@ export default function InterviewClient() {
     }
   };
 
-  // finish interview
   const handleEndInterview = async () => {
     if (loading) return;
 
@@ -207,7 +154,6 @@ export default function InterviewClient() {
     try {
       const feedbackPrompt = {
         role: "user",
-
         content:
           "The interview is now over. Please provide concise professional interview feedback with score, strengths, weaknesses, and improvement advice.",
       };
@@ -217,32 +163,24 @@ export default function InterviewClient() {
         feedbackPrompt,
       ];
 
-      const token =
-        localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-      // generate feedback
       const feedbackRes = await apiFetch(
         `${API_URL}/interviews/chat`,
         {
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
-
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
 
           body: JSON.stringify({
             interviewId,
-
             messages: finalMessages,
-
             jobRole: userProfile.role,
-
             experienceLevel:
               userProfile.experienceLevel,
-
             skills: userProfile.skills,
           }),
         }
@@ -260,7 +198,6 @@ export default function InterviewClient() {
         return;
       }
 
-      // show feedback in chat
       setMessages((prev) => [
         ...prev,
         {
@@ -269,44 +206,29 @@ export default function InterviewClient() {
         },
       ]);
 
-      // save feedback
-      const saveRes = await apiFetch(
+      await apiFetch(
         `${API_URL}/interviews/${interviewId}/feedback`,
         {
           method: "PUT",
 
           headers: {
-            "Content-Type":
-              "application/json",
-
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
 
           body: JSON.stringify({
             feedback: {
               score: "Completed",
-
-              strengths:
-                feedbackData.text,
-
-              improvements:
-                feedbackData.text,
+              strengths: feedbackData.text,
+              improvements: feedbackData.text,
             },
           }),
         }
       );
 
-      const savedInterview =
-        await saveRes.json();
-
-      console.log(savedInterview);
-
       setIsFinished(true);
     } catch (error) {
-      console.error(
-        "Feedback Error:",
-        error
-      );
+      console.error("Feedback Error:", error);
     } finally {
       setLoading(false);
     }
@@ -314,7 +236,6 @@ export default function InterviewClient() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
-      {/* header */}
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-slate-900">
@@ -330,7 +251,7 @@ export default function InterviewClient() {
           <button
             onClick={handleEndInterview}
             disabled={loading}
-            className="px-4 py-2 text-sm font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-all"
+            className="px-4 py-2 text-sm font-bold text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
           >
             Finish & Get Feedback
           </button>
@@ -339,12 +260,11 @@ export default function InterviewClient() {
             href="/dashboard"
             className="px-4 py-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50"
           >
-            Exit to Dashboard
+            Exit to Home
           </Link>
         )}
       </header>
 
-      {/* messages */}
       <main className="flex-1 overflow-y-auto p-6 space-y-6">
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.map((msg, index) => (
@@ -357,8 +277,8 @@ export default function InterviewClient() {
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-5 py-4 whitespace-pre-wrap ${msg.role === "user"
-                    ? "bg-indigo-600 text-white rounded-br-none shadow-md"
-                    : "bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-sm"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white border border-slate-200 text-slate-800"
                   }`}
               >
                 {msg.content}
@@ -367,16 +287,8 @@ export default function InterviewClient() {
           ))}
 
           {loading && (
-            <div className="flex justify-start">
-              <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none shadow-sm">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                </div>
-              </div>
+            <div className="text-slate-500">
+              AI is thinking...
             </div>
           )}
 
@@ -384,7 +296,6 @@ export default function InterviewClient() {
         </div>
       </main>
 
-      {/* input */}
       {!isFinished && (
         <footer className="bg-white border-t border-slate-200 p-4">
           <form
@@ -399,14 +310,12 @@ export default function InterviewClient() {
               }
               disabled={loading}
               placeholder="Answer the question..."
-              className="flex-1 px-5 py-4 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="flex-1 px-5 py-4 bg-slate-50 border border-slate-300 rounded-xl"
             />
 
             <button
-              disabled={
-                loading || !input.trim()
-              }
-              className="px-8 py-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 transition-all"
+              disabled={loading || !input.trim()}
+              className="px-8 py-4 rounded-xl font-bold text-white bg-indigo-600"
             >
               Send
             </button>
