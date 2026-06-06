@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { apiFetch } from "@/lib/api";
+import { API_URL } from "@/lib/configl";
 
 export default function InterviewPage() {
   const [userProfile, setUserProfile] = useState({
@@ -55,7 +57,7 @@ export default function InterviewPage() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5000/api/interviews/${id}`, {
+      const res = await apiFetch(`${API_URL}/interviews/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -106,7 +108,7 @@ export default function InterviewPage() {
     try {
 
       const token = localStorage.getItem('token')
-      const res = await fetch("http://localhost:5000/api/interviews/chat", {
+      const res = await apiFetch(`${API_URL}/interviews/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,8 +156,8 @@ export default function InterviewPage() {
       const token = localStorage.getItem("token");
 
       // STEP 1 → Generate AI feedback
-      const feedbackRes = await fetch(
-        "http://localhost:5000/api/interviews/chat",
+      const feedbackRes = await apiFetch(
+        `${API_URL}/interviews/chat`,
         {
           method: "POST",
 
@@ -191,8 +193,8 @@ export default function InterviewPage() {
       ]);
 
       // STEP 3 → Save feedback + mark completed
-      const saveRes = await fetch(
-        `http://localhost:5000/api/interviews/${interviewId}/feedback`,
+      const saveRes = await apiFetch(
+        `${API_URL}/interviews/${interviewId}/feedback`,
         {
           method: "PUT",
 

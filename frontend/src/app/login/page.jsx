@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-
+import { apiFetch } from "@/lib/api";
 import Link from "next/link";
+import { API_URL } from "@/lib/configl";
 
 export default function LoginPage() {
 
@@ -27,8 +28,8 @@ export default function LoginPage() {
 
     try {
 
-      const res = await fetch(
-        "http://localhost:5000/api/auth/login",
+      const res = await apiFetch(
+        `${API_URL}/auth/login`,
         {
           method: "POST",
 

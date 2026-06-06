@@ -1,6 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { checkAuth } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
+import { API_URL } from "@/lib/configl";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -13,6 +16,9 @@ export default function SetupPage() {
   })
 
   useEffect(() => {
+
+    const token = checkAuth()
+    if (!token) return
     const savedInterview = localStorage.getItem('retakeInterview')
     if (savedInterview) {
       setFormData(JSON.parse(savedInterview))
@@ -37,8 +43,8 @@ export default function SetupPage() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(
-        "http://localhost:5000/api/interviews/setup",
+      const res = await apiFetch(
+        `${API_URL}/interviews/setup`,
         {
           method: "POST",
 
