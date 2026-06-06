@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const fetchInterviews = async (token) => {
     try {
       const res = await apiFetch(
-        `${API_URL}/interviews/my-interviews`,
+        `${API_URL}/api/interviews/my-interviews`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await apiFetch(`${API_URL}/interviews/${id}`, {
+      const res = await apiFetch(`${API_URL}/api/interviews/${id}`, {
         method: "DELETE",
 
         headers: {

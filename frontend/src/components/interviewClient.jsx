@@ -60,7 +60,7 @@ export default function InterviewClient() {
       const token = localStorage.getItem("token");
 
       const res = await apiFetch(
-        `${API_URL}/interviews/${id}`,
+        `${API_URL}/api/interviews/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -108,7 +108,7 @@ export default function InterviewClient() {
       const token = localStorage.getItem("token");
 
       const res = await apiFetch(
-        `${API_URL}/interviews/chat`,
+        `${API_URL}/api/interviews/chat`,
         {
           method: "POST",
 
@@ -166,7 +166,7 @@ export default function InterviewClient() {
       const token = localStorage.getItem("token");
 
       const feedbackRes = await apiFetch(
-        `${API_URL}/interviews/chat`,
+        `${API_URL}/api/interviews/chat`,
         {
           method: "POST",
 
@@ -207,7 +207,7 @@ export default function InterviewClient() {
       ]);
 
       await apiFetch(
-        `${API_URL}/interviews/${interviewId}/feedback`,
+        `${API_URL}/api/interviews/${interviewId}/feedback`,
         {
           method: "PUT",
 
@@ -271,14 +271,14 @@ export default function InterviewClient() {
             <div
               key={index}
               className={`flex ${msg.role === "user"
-                  ? "justify-end"
-                  : "justify-start"
+                ? "justify-end"
+                : "justify-start"
                 }`}
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-5 py-4 whitespace-pre-wrap ${msg.role === "user"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-white border border-slate-200 text-slate-800"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white border border-slate-200 text-slate-800"
                   }`}
               >
                 {msg.content}

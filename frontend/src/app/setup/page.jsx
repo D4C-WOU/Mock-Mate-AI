@@ -44,7 +44,7 @@ export default function SetupPage() {
       const token = localStorage.getItem("token");
 
       const res = await apiFetch(
-        `${API_URL}/interviews/setup`,
+        `${API_URL}/api/interviews/setup`,
         {
           method: "POST",
 
