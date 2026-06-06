@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { checkAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
-import { API_URL } from "@/lib/configl";
+import { API_URL } from "@/lib/config";
 
 export default function DashboardPage() {
   const [interviews, setInterviews] = useState([]);

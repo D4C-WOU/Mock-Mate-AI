@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import Link from "next/link";
-import { API_URL } from "@/lib/configl";
+import { API_URL } from "@/lib/config";
 
 export default function LoginPage() {
 

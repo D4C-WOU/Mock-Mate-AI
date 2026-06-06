@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { checkAuth } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
-import { API_URL } from "@/lib/configl";
+import { API_URL } from "@/lib/config";
 
 export default function SetupPage() {
   const router = useRouter();
