@@ -19,8 +19,7 @@ export default function InterviewClient() {
   const [messages, setMessages] = useState([
     {
       role: "model",
-      content:
-        "Hello! I am your AI Mock Interviewer. Are you ready to begin?",
+      content: "Hello! I am your AI Mock Interviewer. Are you ready to begin?",
     },
   ]);
 
@@ -39,8 +38,7 @@ export default function InterviewClient() {
 
     const storedInterviewId = localStorage.getItem("interviewId");
 
-    const finalInterviewId =
-      interviewIdFromUrl || storedInterviewId;
+    const finalInterviewId = interviewIdFromUrl || storedInterviewId;
 
     if (finalInterviewId) {
       setInterviewId(finalInterviewId);
@@ -59,14 +57,11 @@ export default function InterviewClient() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await apiFetch(
-        `${API_URL}/api/interviews/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await apiFetch(`${API_URL}/api/interviews/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await res.json();
 
@@ -107,26 +102,22 @@ export default function InterviewClient() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await apiFetch(
-        `${API_URL}/api/interviews/chat`,
-        {
-          method: "POST",
+      const res = await apiFetch(`${API_URL}/api/interviews/chat`, {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
 
-          body: JSON.stringify({
-            interviewId,
-            messages: newMessages,
-            experienceLevel:
-              userProfile.experienceLevel,
-            jobRole: userProfile.role,
-            skills: userProfile.skills,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          interviewId,
+          messages: newMessages,
+          experienceLevel: userProfile.experienceLevel,
+          jobRole: userProfile.role,
+          skills: userProfile.skills,
+        }),
+      });
 
       const data = await res.json();
 
@@ -158,42 +149,31 @@ export default function InterviewClient() {
           "The interview is now over. Please provide concise professional interview feedback with score, strengths, weaknesses, and improvement advice.",
       };
 
-      const finalMessages = [
-        ...messages,
-        feedbackPrompt,
-      ];
+      const finalMessages = [...messages, feedbackPrompt];
 
       const token = localStorage.getItem("token");
 
-      const feedbackRes = await apiFetch(
-        `${API_URL}/api/interviews/chat`,
-        {
-          method: "POST",
+      const feedbackRes = await apiFetch(`${API_URL}/api/interviews/chat`, {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
 
-          body: JSON.stringify({
-            interviewId,
-            messages: finalMessages,
-            jobRole: userProfile.role,
-            experienceLevel:
-              userProfile.experienceLevel,
-            skills: userProfile.skills,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          interviewId,
+          messages: finalMessages,
+          jobRole: userProfile.role,
+          experienceLevel: userProfile.experienceLevel,
+          skills: userProfile.skills,
+        }),
+      });
 
-      const feedbackData =
-        await feedbackRes.json();
+      const feedbackData = await feedbackRes.json();
 
       if (!feedbackRes.ok) {
-        alert(
-          feedbackData.message ||
-          "AI temporarily unavailable"
-        );
+        alert(feedbackData.message || "AI temporarily unavailable");
 
         return;
       }
@@ -206,25 +186,22 @@ export default function InterviewClient() {
         },
       ]);
 
-      await apiFetch(
-        `${API_URL}/api/interviews/${interviewId}/feedback`,
-        {
-          method: "PUT",
+      await apiFetch(`${API_URL}/api/interviews/${interviewId}/feedback`, {
+        method: "PUT",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          feedback: {
+            score: "Completed",
+            strengths: feedbackData.text,
+            improvements: feedbackData.text,
           },
-
-          body: JSON.stringify({
-            feedback: {
-              score: "Completed",
-              strengths: feedbackData.text,
-              improvements: feedbackData.text,
-            },
-          }),
-        }
-      );
+        }),
+      });
 
       setIsFinished(true);
     } catch (error) {
@@ -242,9 +219,7 @@ export default function InterviewClient() {
             Technical Interview
           </h1>
 
-          <p className="text-sm text-slate-500">
-            Role: {userProfile.role}
-          </p>
+          <p className="text-sm text-slate-500">Role: {userProfile.role}</p>
         </div>
 
         {!isFinished ? (
@@ -270,9 +245,7 @@ export default function InterviewClient() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex ${msg.role === "user"
-                ? "justify-end"
-                : "justify-start"
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
                 }`}
             >
               <div
@@ -286,36 +259,28 @@ export default function InterviewClient() {
             </div>
           ))}
 
-          {loading && (
-            <div className="text-slate-500">
-              AI is thinking...
-            </div>
-          )}
+          {loading && <div className="text-slate-500">AI is thinking...</div>}
 
           <div ref={messagesEndRef} />
         </div>
       </main>
 
       {!isFinished && (
-        <footer className="bg-white border-t border-slate-200 p-4">
-          <form
-            onSubmit={handleSend}
-            className="max-w-3xl mx-auto flex gap-4"
-          >
+        <footer className="bg-white border-t border-slate-200 p-4 shrink-0">
+          <form onSubmit={handleSend} className="max-w-3xl mx-auto flex gap-4 items-center">
             <input
               type="text"
               value={input}
-              onChange={(e) =>
-                setInput(e.target.value)
-              }
+              onChange={(e) => setInput(e.target.value)}
               disabled={loading}
               placeholder="Answer the question..."
-              className="flex-1 px-5 py-4 bg-slate-50 border border-slate-300 rounded-xl"
+              className="flex-1 px-5 py-4 rounded-xl border border-slate-300 bg-white text-black 
+              placeholder:text-slate-400 caret-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
 
             <button
               disabled={loading || !input.trim()}
-              className="px-8 py-4 rounded-xl font-bold text-white bg-indigo-600"
+              className="px-8 py-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 transition-all"
             >
               Send
             </button>
