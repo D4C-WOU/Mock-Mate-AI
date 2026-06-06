@@ -1,16 +1,15 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { API_URL } from "@/lib/configl";
 
-export default function InterviewPage() {
+function InterviewContent() {
   const [userProfile, setUserProfile] = useState({
     role: "Full Stack Developer",
     skills: "React, Next.js, FastAPI, MongoDB, Tailwind",
     experienceLevel: "Entry Level / Fresher",
-
   });
 
   const [interviewId, setInterviewId] = useState("");
@@ -72,7 +71,7 @@ export default function InterviewPage() {
         setUserProfile({
           role: data.jobRole,
           skills: data.skills,
-          experienceLevel: data.experienceLevel
+          experienceLevel: data.experienceLevel,
         });
 
         if (data.messages.length > 0) {
@@ -92,7 +91,7 @@ export default function InterviewPage() {
   };
 
   const handleSend = async (e) => {
-    if (loading) return
+    if (loading) return;
     if (e) e.preventDefault();
     if (!input.trim() || loading || isFinished) return;
 
@@ -106,13 +105,12 @@ export default function InterviewPage() {
     setLoading(true);
 
     try {
-
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem("token");
       const res = await apiFetch(`${API_URL}/interviews/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           interviewId,
@@ -156,25 +154,22 @@ export default function InterviewPage() {
       const token = localStorage.getItem("token");
 
       // STEP 1 → Generate AI feedback
-      const feedbackRes = await apiFetch(
-        `${API_URL}/interviews/chat`,
-        {
-          method: "POST",
+      const feedbackRes = await apiFetch(`${API_URL}/interviews/chat`, {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
 
-          body: JSON.stringify({
-            interviewId,
-            messages: finalMessages,
-            jobRole: userProfile.role,
-            experienceLevel: userProfile.experienceLevel,
-            skills: userProfile.skills,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          interviewId,
+          messages: finalMessages,
+          jobRole: userProfile.role,
+          experienceLevel: userProfile.experienceLevel,
+          skills: userProfile.skills,
+        }),
+      });
 
       const feedbackData = await feedbackRes.json();
 
@@ -210,7 +205,7 @@ export default function InterviewPage() {
               improvements: feedbackData.text,
             },
           }),
-        }
+        },
       );
 
       const savedInterview = await saveRes.json();
@@ -219,7 +214,6 @@ export default function InterviewPage() {
 
       // STEP 4 → Finish interview
       setIsFinished(true);
-
     } catch (error) {
       console.error("Feedback Error:", error);
     } finally {
@@ -313,4 +307,13 @@ export default function InterviewPage() {
       )}
     </div>
   );
+}
+
+
+export default function InterviewPage() {
+  return (
+    <Suspense fallback={<div>Loading Interview...</div>}>
+      <InterviewContent />
+    </Suspense>
+  )
 }
