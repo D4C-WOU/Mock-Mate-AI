@@ -43,6 +43,16 @@ export default function DashboardPage() {
 
       const data = await res.json();
 
+      // session management
+      if (res.status === 401) {
+
+        localStorage.clear();
+
+        window.location.href = "/login";
+
+        return;
+      }
+
       if (Array.isArray(data)) {
         setInterviews(data);
       } else {
@@ -73,6 +83,36 @@ export default function DashboardPage() {
     window.location.href = '/setup'
   }
 
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `http://localhost:5000/api/interviews/${id}`,
+        {
+          method: "DELETE",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Delete failed");
+      }
+
+      // remove deleted interview from UI instantly
+      setInterviews((prev) =>
+        prev.filter((interview) => interview._id !== id)
+      );
+
+    } catch (error) {
+      console.error("Delete Error:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
@@ -141,6 +181,18 @@ export default function DashboardPage() {
                   {interview.experienceLevel}
                 </p>
 
+                <p className="mt-3 text-sm text-slate-600 line-clamp-3">
+                  {interview.skills}
+                </p>
+                <p
+                  className={`mt-3 text-sm font-semibold ${interview.status === "completed"
+                    ? "text-green-600"
+                    : "text-yellow-600"
+                    }`}
+                >
+                  {interview.status.toUpperCase()}
+                </p>
+
                 <p className="text-sm text-slate-400 mt-3">
                   {new Date(
                     interview.createdAt
@@ -149,7 +201,7 @@ export default function DashboardPage() {
 
 
 
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex flex-wrap gap-3">
 
                   <Link
                     href={`/interview?id=${interview._id}`}
@@ -162,6 +214,12 @@ export default function DashboardPage() {
                   <button onClick={() => handleRetake(interview)}
                     className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Retake
+                  </button>
+
+                  <button onClick={() => handleDelete(interview._id)}
+                    className="inline-block px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    Delete
                   </button>
                 </div>
 

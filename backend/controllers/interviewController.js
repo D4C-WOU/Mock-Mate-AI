@@ -3,7 +3,7 @@ const Interview = require("../models/Interview");
 const {
   generateAIResponse,
   generateInterviewFeedback,
-} = require("../services/geminiService");
+} = require("../services/aiService");
 
 // CREATE INTERVIEW
 const createInterview = async (req, res) => {
@@ -37,9 +37,15 @@ const createInterview = async (req, res) => {
 // CHAT WITH AI + SAVE MESSAGES
 const chatWithAI = async (req, res) => {
   try {
-    const { interviewId, messages, jobRole, skills } = req.body;
+    const { interviewId, messages, jobRole, skills, experienceLevel } =
+      req.body;
 
-    const aiText = await generateAIResponse(messages, jobRole, skills);
+    const aiText = await generateAIResponse(
+      messages,
+      jobRole,
+      skills,
+      experienceLevel,
+    );
 
     const updatedMessages = [
       ...messages,
@@ -108,42 +114,52 @@ const getInterviewById = async (req, res) => {
   }
 };
 
+// DELETE INTERVIEW
+const deleteInterview = async (req, res) => {
+  try {
+    const deletedInterview = await Interview.findByIdAndDelete(req.params.id);
+
+    if (!deletedInterview) {
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Interview deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete Interview Error:", error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
 const saveInterviewFeedback = async (req, res) => {
   try {
-    const { interviewId, messages, jobRole, skills } = req.body;
-
-    const feedbackText = await generateInterviewFeedback(
-      messages,
-      jobRole,
-      skills,
-    );
-
-    const cleanedText = feedbackText
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const feedback = JSON.parse(cleanedText);
+    const { feedback } = req.body;
 
     const updatedInterview = await Interview.findByIdAndUpdate(
-      interviewId,
+      req.params.id,
+
       {
         feedback,
         status: "completed",
       },
+
       {
         new: true,
       },
     );
 
-    res.status(200).json({
-      feedback: updatedInterview.feedback,
-    });
+    res.status(200).json(updatedInterview);
   } catch (error) {
     console.error("Save Feedback Error:", error);
 
     res.status(500).json({
-      message: "Feedback generation failed",
+      message: "Server Error",
     });
   }
 };
@@ -158,4 +174,6 @@ module.exports = {
   getInterviewById,
 
   saveInterviewFeedback,
+
+  deleteInterview,
 };

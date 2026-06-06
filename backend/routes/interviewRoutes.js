@@ -10,6 +10,7 @@ const {
   getUserInterviews,
   getInterviewById,
   saveInterviewFeedback,
+  deleteInterview,
 } = require("../controllers/interviewController");
 
 // CREATE INTERVIEW
@@ -25,5 +26,8 @@ router.get("/my-interviews", protect, getUserInterviews);
 
 // GET SINGLE INTERVIEW
 router.get("/:id", protect, getInterviewById);
+
+//delete an interview
+router.delete("/:id", protect, deleteInterview);
 
 module.exports = router;
